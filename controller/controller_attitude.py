@@ -3,9 +3,9 @@
 import rospy
 
 from std_msgs.msg import Header
-from geometry_msgs.msg import PoseStamped, TwistStamped, Quaternion
-from std_msgs.msg import Float64
+from geometry_msgs.msg import PoseStamped, Quaternion
 from mavros_msgs.msg import ManualControl, Thrust
+from ar_track_alvar_msgs.msg import AlvarMarkers
 from tf.transformations import quaternion_from_euler
 
 class Controller:
@@ -23,16 +23,17 @@ class Controller:
                                                      PoseStamped, queue_size=1)
         self.setpoint_thrust_pub = rospy.Publisher('mavros/setpoint_attitude/thrust',
                                                      Thrust, queue_size=1)
-        self.setpoint_position_local_pub = rospy.Publisher('mavros/setpoint_position/local', PoseStamped, queue_size=10)
         rospy.Subscriber('mavros/manual_control/control', ManualControl,
                          self.manual_control_callback)
-
+        rospy.Subscriber('ar_pose_marker', AlvarMarkers,
+                         self.pose_marker_callback)
         self.throttle_gain = 0.2
         self.ground_level = None
         self.z_ref = 0
 
         self.manual_control = None
-
+        self.pose_markers = None
+        self.marker_id = 0
 
     def manual_control_callback(self, message):
         self.manual_control = message
@@ -83,10 +84,20 @@ class Controller:
                           -self.manual_control.r)
             self.throttle()
 
+    def get_marker_pose(self):
+        if self.pose_markers is not None:
+            for marker in self.pose_markers.markers:
+                if marker.id == self.marker_id:
+                    return marker.pose
+        return None
+
     def local_position_pose_callback(self, message):
         self.local_position = message
         if self.ground_level is None:
             self.ground_level = message.pose.position.z
+
+    def pose_marker_callback(self, message):
+        self.pose_markers = message
 
 if __name__ == '__main__':
     rospy.init_node('controller')
