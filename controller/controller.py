@@ -9,6 +9,7 @@ from attitude import Attitude
 from mavros_msgs.msg import ManualControl, Thrust
 from tf.transformations import quaternion_from_euler, euler_from_quaternion
 
+
 def saturation(value, lover_value, upper_value):
     if value < lover_value:
         return lover_value
@@ -35,7 +36,7 @@ class Controller:
                                                      Thrust, queue_size=1)
 
         rospy.Timer(rospy.Duration(0.01), lambda event: self.update())
-        rospy.Timer(rospy.Duration(0.01), lambda event: self.control())
+        rospy.Timer(rospy.Duration(0.1), lambda event: self.control())
 
         rospy.Subscriber('mavros/manual_control/control', ManualControl,
                          self.manual_control_callback)
@@ -79,19 +80,22 @@ class Controller:
         self.setpoint_thrust_pub.publish(msg)
 
     def set_attitude(self, roll, pitch, yaw):
+        def wrap_to_pi(angle):
+            while angle > math.pi:
+                angle -= 2 * math.pi
+            while angle < -math.pi:
+                angle += 2 * math.pi
+            return angle
+
         rospy.loginfo('attitude(%.2f, %.2f, %.2f)' % (roll, pitch, yaw))
         pos = PoseStamped()
         pos.header = Header()
         pos.header.frame_id = 'base_footprint'
         pos.header.stamp = rospy.Time.now()
 
-        yaw_fixed = yaw - self.attitude.yaw_fix
-        while yaw_fixed > math.pi:
-            yaw_fixed -= 2 * math.pi
-        while yaw_fixed < -math.pi:
-            yaw_fixed += 2 * math.pi
-
+        yaw_fixed = wrap_to_pi(yaw - self.attitude.yaw_fix)
         print yaw_fixed, self.attitude.yaw_fix
+
         quaternion = quaternion_from_euler(roll, -pitch, yaw_fixed)
         pos.pose.orientation = Quaternion(*quaternion)
         self.setpoint_attitude_pub.publish(pos)
