@@ -19,9 +19,9 @@ def saturation(value, lover_value, upper_value):
 
 class Controller:
 
+    BASE_THRUST = 0.45
     CONTROL_TO_DEG = 0.1
     CONTROL_TO_THRUST = 0.2
-    CONTROL_THROTTLE_BASE = 0.45
 
     def __init__(self):
 
@@ -41,10 +41,8 @@ class Controller:
         rospy.Subscriber('mavros/manual_control/control', ManualControl,
                          self.manual_control_callback)
 
-
     def manual_control_callback(self, message):
         self.manual_control = message
-
 
     def update(self):
         self.coordinate = self.camera_tracker.get_coordinate()
@@ -60,24 +58,25 @@ class Controller:
             yaw += -self.manual_control.r
 
         self.set_attitude(roll, pitch, yaw)
-        self.set_throttle()
+        self.set_thrust()
 
-    def set_throttle(self):
-        if self.manual_control is None :
+    def set_thrust(self):
+        if self.manual_control is None:
             return
 
         z_ref = 0.5
         delta = z_ref - self.coordinate.z
-        thr = Controller.CONTROL_THROTTLE_BASE + Controller.CONTROL_TO_THRUST * delta
+        thrust = Controller.BASE_THRUST + Controller.CONTROL_TO_THRUST * delta
 
         msg = Thrust()
         msg.header = Header()
         msg.header.frame_id = 'base_footprint'
         msg.header.stamp = rospy.Time.now()
-        msg.thrust = saturation(thr, 0, self.manual_control.z)
-        # rospy.loginfo('throttle(%.2f, %.2f, %.2f, %.2f)'
-        #               % (z_ref, delta, thr, msg.thrust))
+        msg.thrust = saturation(thrust, 0, self.manual_control.z)
         self.setpoint_thrust_pub.publish(msg)
+
+        # rospy.loginfo('thrust(%.2f, %.2f, %.2f, %.2f)'
+        #               % (z_ref, delta, thrust, msg.thrust))
 
     def set_attitude(self, roll, pitch, yaw):
         def wrap_to_pi(angle):
@@ -87,18 +86,19 @@ class Controller:
                 angle += 2 * math.pi
             return angle
 
-        rospy.loginfo('attitude(%.2f, %.2f, %.2f)' % (roll, pitch, yaw))
         pos = PoseStamped()
         pos.header = Header()
         pos.header.frame_id = 'base_footprint'
         pos.header.stamp = rospy.Time.now()
 
-        yaw_fixed = wrap_to_pi(yaw - self.attitude.yaw_fix)
-        print yaw_fixed, self.attitude.yaw_fix
+        yaw_delta = wrap_to_pi(yaw - self.attitude.yaw_delta)
+        print yaw_delta, self.attitude.yaw_delta
 
-        quaternion = quaternion_from_euler(roll, -pitch, yaw_fixed)
+        quaternion = quaternion_from_euler(roll, -pitch, yaw_delta)
         pos.pose.orientation = Quaternion(*quaternion)
         self.setpoint_attitude_pub.publish(pos)
+
+        rospy.loginfo('attitude(%.2f, %.2f, %.2f)' % (roll, pitch, yaw))
 
 if __name__ == '__main__':
     rospy.init_node('controller')

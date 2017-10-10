@@ -1,6 +1,7 @@
 import rospy
 from math import sqrt
 
+
 class Coordinate:
 
     def __init__(self, x=0, y=0, z=0, yaw=0):
@@ -22,9 +23,11 @@ class Coordinate:
 
     def low_pass_filter(self, coordinate, T):
         """lpf with transfer function W(s) = 1 / (Ts + 1)"""
-        dt = coordinate.timestamp - self.timestamp
-        self.x +=   1. / T * (coordinate.x - self.x) * dt
-        self.y +=   1. / T * (coordinate.y - self.y) * dt
-        self.z +=   1. / T * (coordinate.z - self.z) * dt
-        self.yaw += 1. / T * (coordinate.yaw - self.yaw) * dt
+
+        k = (coordinate.timestamp - self.timestamp) / T
+
+        self.x += k * (coordinate.x - self.x)
+        self.y += k * (coordinate.y - self.y)
+        self.z += k * (coordinate.z - self.z)
+        self.yaw += k * (coordinate.yaw - self.yaw)
         self.timestamp = coordinate.timestamp

@@ -4,6 +4,7 @@ import rospy
 from coordinate import Coordinate
 from tf.transformations import euler_from_quaternion
 
+
 class CameraTracker:
 
     def __init__(self, marker_id='ar_marker_0'):
@@ -18,9 +19,9 @@ class CameraTracker:
 
     def __timer_callback(self):
         try:
-            (v, q) = self.listener.lookupTransform('/world', self.marker_id, rospy.Time(0))
+            (p, q) = self.listener.lookupTransform('/world', self.marker_id, rospy.Time(0))
             euler = euler_from_quaternion(q)
-            self.__update(Coordinate(v[0], v[1], v[2], euler[2]))
+            self.__update(Coordinate(p[0], p[1], p[2], euler[2]))
         except:
             pass
 
