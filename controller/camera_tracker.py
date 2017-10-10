@@ -29,6 +29,7 @@ class CameraTracker:
         if -2 < coordinate.x < 2 and -2 < coordinate.y < 2 and -1 < coordinate.z < 3:
             self.coordinate.low_pass_filter(coordinate, T=0.1)
 
+
 if __name__ == '__main__':
     rospy.init_node('camera_tracker')
     cam_tracker = CameraTracker()

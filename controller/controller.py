@@ -1,11 +1,11 @@
 import math
 import rospy
 
-from std_msgs.msg import Header
-from coordinate import Coordinate
-from geometry_msgs.msg import PoseStamped, Quaternion
-from camera_tracker import CameraTracker
 from attitude import Attitude
+from coordinate import Coordinate
+from camera_tracker import CameraTracker
+from std_msgs.msg import Header
+from geometry_msgs.msg import PoseStamped, Quaternion
 from mavros_msgs.msg import ManualControl, Thrust
 from tf.transformations import quaternion_from_euler, euler_from_quaternion
 
@@ -58,25 +58,23 @@ class Controller:
             yaw += -self.manual_control.r
 
         self.set_attitude(roll, pitch, yaw)
-        self.set_thrust()
+        self.set_thrust(0.5)
 
-    def set_thrust(self):
-        if self.manual_control is None:
-            return
-
-        z_ref = 0.5
+    def set_thrust(self, z_ref):
         delta = z_ref - self.coordinate.z
         thrust = Controller.BASE_THRUST + Controller.CONTROL_TO_THRUST * delta
+
+        if self.manual_control is not None:
+            thrust = saturation(thrust, 0, self.manual_control.z)
 
         msg = Thrust()
         msg.header = Header()
         msg.header.frame_id = 'base_footprint'
         msg.header.stamp = rospy.Time.now()
-        msg.thrust = saturation(thrust, 0, self.manual_control.z)
+        msg.thrust = thrust
         self.setpoint_thrust_pub.publish(msg)
 
-        # rospy.loginfo('thrust(%.2f, %.2f, %.2f, %.2f)'
-        #               % (z_ref, delta, thrust, msg.thrust))
+#            rospy.loginfo('thrust(%.2f, %.2f)' % (delta, msg.thrust))
 
     def set_attitude(self, roll, pitch, yaw):
         def wrap_to_pi(angle):
@@ -100,11 +98,8 @@ class Controller:
 
         rospy.loginfo('attitude(%.2f, %.2f, %.2f)' % (roll, pitch, yaw))
 
+
 if __name__ == '__main__':
     rospy.init_node('controller')
     contoller = Controller()
-    while not rospy.is_shutdown():
-        pass
-
-
-
+    rospy.spin()

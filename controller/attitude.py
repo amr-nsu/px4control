@@ -31,5 +31,4 @@ class Attitude:
 if __name__ == '__main__':
     rospy.init_node('attitude')
     attitude = Attitude()
-    while not rospy.is_shutdown():
-        pass
+    rospy.spin()
