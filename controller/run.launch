@@ -1,6 +1,6 @@
 <launch>
     <node pkg="mavros" type="mavros_node" name="mavros"
           respawn="true" respawn_delay="1">
-        <rosparam command="load" file="config/mavros-pixhawk.yaml" />
+        <rosparam command="load" file="config/mavros-radio.yaml" />
     </node>
 </launch>

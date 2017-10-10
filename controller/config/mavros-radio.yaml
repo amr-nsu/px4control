@@ -1,2 +1,5 @@
-fcu_url: /dev/ttyUSB0:57600
+fcu_url: /dev/ttyUSB0:115200
 gcs_url: udp://0.0.0.0:14555@0.0.0.0:14550
+
+setpoint_attitude:
+    use_quaternion: true
