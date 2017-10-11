@@ -22,6 +22,7 @@ class Controller:
     BASE_THRUST = 0.45
     CONTROL_TO_DEG = 0.1
     CONTROL_TO_THRUST = 0.2
+    DELTA_ANGLE = 2.0
 
     def __init__(self):
 
@@ -36,7 +37,7 @@ class Controller:
                                                      Thrust, queue_size=1)
 
         rospy.Timer(rospy.Duration(0.01), lambda event: self.update())
-        rospy.Timer(rospy.Duration(0.1), lambda event: self.control())
+        rospy.Timer(rospy.Duration(0.02), lambda event: self.control())
 
         rospy.Subscriber('mavros/manual_control/control', ManualControl,
                          self.manual_control_callback)
@@ -55,10 +56,10 @@ class Controller:
         if self.manual_control is not None:
             roll += self.manual_control.y * Controller.CONTROL_TO_DEG
             pitch += -self.manual_control.x * Controller.CONTROL_TO_DEG
-            yaw += -self.manual_control.r
+            yaw += -self.manual_control.r * math.pi
 
         self.set_attitude(roll, pitch, yaw)
-        self.set_thrust(0.5)
+        self.set_thrust(z_ref=0.5)
 
     def set_thrust(self, z_ref):
         delta = z_ref - self.coordinate.z
@@ -74,7 +75,7 @@ class Controller:
         msg.thrust = thrust
         self.setpoint_thrust_pub.publish(msg)
 
-#            rospy.loginfo('thrust(%.2f, %.2f)' % (delta, msg.thrust))
+        rospy.loginfo('thrust(%.2f, %.2f)' % (delta, msg.thrust))
 
     def set_attitude(self, roll, pitch, yaw):
         def wrap_to_pi(angle):
@@ -89,10 +90,10 @@ class Controller:
         pos.header.frame_id = 'base_footprint'
         pos.header.stamp = rospy.Time.now()
 
-        yaw_delta = wrap_to_pi(yaw - self.attitude.yaw_delta)
-        print yaw_delta, self.attitude.yaw_delta
+        yaw = wrap_to_pi(yaw + Controller.DELTA_ANGLE)
+#        yaw = wrap_to_pi(yaw - self.attitude.yaw_delta)
 
-        quaternion = quaternion_from_euler(roll, -pitch, yaw_delta)
+        quaternion = quaternion_from_euler(roll, -pitch, yaw)
         pos.pose.orientation = Quaternion(*quaternion)
         self.setpoint_attitude_pub.publish(pos)
 
