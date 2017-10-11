@@ -9,6 +9,12 @@ class Coordinate:
         self.y = y
         self.z = z
         self.yaw = yaw
+
+        self.vx = 0
+        self.vy = 0
+        self.vz = 0
+        self.vyaw = 0
+
         self.timestamp = rospy.get_time()
 
     def __repr__(self):
@@ -24,10 +30,16 @@ class Coordinate:
     def low_pass_filter(self, coordinate, T):
         """lpf with transfer function W(s) = 1 / (Ts + 1)"""
 
-        k = (coordinate.timestamp - self.timestamp) / T
+        dt = coordinate.timestamp - self.timestamp
 
-        self.x += k * (coordinate.x - self.x)
-        self.y += k * (coordinate.y - self.y)
-        self.z += k * (coordinate.z - self.z)
-        self.yaw += k * (coordinate.yaw - self.yaw)
+        self.vx = (coordinate.x - self.x) / T
+        self.vy = (coordinate.y - self.y) / T
+        self.vz = (coordinate.z - self.z) / T
+        self.vyaw = (coordinate.yaw - self.yaw) / T
+
+        self.x += self.vx * dt
+        self.y += self.vy * dt
+        self.z += self.vz * dt
+        self.yaw += self.vyaw * dt
+
         self.timestamp = coordinate.timestamp
