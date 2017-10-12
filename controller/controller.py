@@ -16,35 +16,30 @@ def saturation(value, lover_value, upper_value):
         return upper_value
     return value
 
+
 class Controller:
 
     def __init__(self):
 
         self.camera_tracker = CameraTracker()
-        self.manual_control = None
         self.coordinate = Coordinate()
+        self.manual_control = None
 
         self.setpoint_attitude_pub = rospy.Publisher('mavros/setpoint_attitude/target_attitude',
                                                      PoseStamped, queue_size=1)
         self.setpoint_thrust_pub = rospy.Publisher('mavros/setpoint_attitude/thrust',
                                                      Thrust, queue_size=1)
 
-        rospy.Timer(rospy.Duration(0.01), lambda event: self.update())
+        rospy.Timer(rospy.Duration(0.01), lambda event: self.__update_coordinate())
 
         rospy.Subscriber('mavros/manual_control/control', ManualControl,
-                         self.manual_control_callback)
-
-    def set_update(self, period, callback):
-        rospy.Timer(rospy.Duration(period), lambda event: callback())
+                         self.__manual_control_callback)
 
     def get_coordinate(self):
         return self.coordinate
 
-    def manual_control_callback(self, message):
-        self.manual_control = message
-
-    def update(self):
-        self.coordinate = self.camera_tracker.get_coordinate()
+    def set_update(self, period, callback):
+        rospy.Timer(rospy.Duration(period), lambda event: callback())
 
     def set_control(self, roll, pitch, yaw, thrust):
         if self.manual_control is not None:
@@ -74,3 +69,9 @@ class Controller:
         pos.pose.orientation = Quaternion(*quaternion)
         self.setpoint_attitude_pub.publish(pos)
         rospy.loginfo('attitude(%.2f, %.2f, %.2f)' % (roll, pitch, yaw))
+
+    def __manual_control_callback(self, message):
+        self.manual_control = message
+
+    def __update_coordinate(self):
+        self.coordinate = self.camera_tracker.get_coordinate()
