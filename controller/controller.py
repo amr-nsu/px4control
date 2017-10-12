@@ -74,9 +74,3 @@ class Controller:
         pos.pose.orientation = Quaternion(*quaternion)
         self.setpoint_attitude_pub.publish(pos)
         rospy.loginfo('attitude(%.2f, %.2f, %.2f)' % (roll, pitch, yaw))
-
-
-if __name__ == '__main__':
-    rospy.init_node('controller')
-    contoller = Controller()
-    rospy.spin()
