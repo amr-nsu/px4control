@@ -6,9 +6,9 @@ class Algorithm:
     def __init__(self, controller):
         self.controller = controller
         self.z_ref = 0.5
-        self.controller.set_update(0.01, self.update)
+        self.controller.set_control_loop(0.01, self.loop)
 
-    def update(self):
+    def loop(self):
         coordinate = self.controller.get_coordinate()
 
         delta = self.z_ref - coordinate.z

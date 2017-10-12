@@ -38,7 +38,7 @@ class Controller:
     def get_coordinate(self):
         return self.coordinate
 
-    def set_update(self, period, callback):
+    def set_control_loop(self, period, callback):
         rospy.Timer(rospy.Duration(period), lambda event: callback())
 
     def set_control(self, roll, pitch, yaw, thrust):
