@@ -34,9 +34,7 @@ class CameraTracker:
             self.pose.pose.orientation.y = q_list[1]
             self.pose.pose.orientation.z = q_list[2]
             self.pose.pose.orientation.w = q_list[3]
-            print p_list[0], p_list[1], p_list[2]
             (roll, pitch, yaw) = euler_from_quaternion(q_list)
-#            print roll, pitch, yaw
             self.__update(Coordinate(p_list[0], p_list[1], p_list[2], yaw))
         except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
             pass

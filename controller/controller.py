@@ -1,7 +1,6 @@
 import math
 import rospy
 
-from attitude import Attitude
 from coordinate import Coordinate
 from camera_tracker import CameraTracker
 from std_msgs.msg import Header
@@ -19,15 +18,9 @@ def saturation(value, lover_value, upper_value):
 
 class Controller:
 
-    BASE_THRUST = 0.45
-    CONTROL_TO_DEG = 0.1
-    CONTROL_TO_THRUST = 0.2
-    DELTA_ANGLE = 2.0
-
     def __init__(self):
 
         self.camera_tracker = CameraTracker()
-        self.attitude = Attitude()
         self.manual_control = None
         self.coordinate = Coordinate()
 
@@ -37,56 +30,49 @@ class Controller:
                                                      Thrust, queue_size=1)
 
         rospy.Timer(rospy.Duration(0.01), lambda event: self.update())
-        rospy.Timer(rospy.Duration(0.02), lambda event: self.control())
 
         rospy.Subscriber('mavros/manual_control/control', ManualControl,
                          self.manual_control_callback)
+
+    def set_update(self, period, callback):
+        rospy.Timer(rospy.Duration(period), lambda event: callback())
+
+    def get_coordinate(self):
+        return self.coordinate
 
     def manual_control_callback(self, message):
         self.manual_control = message
 
     def update(self):
         self.coordinate = self.camera_tracker.get_coordinate()
-        self.attitude.update(self.coordinate.yaw)
 
-    def control(self):
-        roll, pitch, yaw = 0, 0, 0
-        # yaw = math.pi/10 * math.sin(0.1 * rospy.get_time())
-
+    def set_control(self, roll, pitch, yaw, thrust):
         if self.manual_control is not None:
-            roll += self.manual_control.y * Controller.CONTROL_TO_DEG
-            pitch += -self.manual_control.x * Controller.CONTROL_TO_DEG
+            CONTROL_TO_DEG = 0.1
+            roll += self.manual_control.y * CONTROL_TO_DEG
+            pitch += self.manual_control.x * CONTROL_TO_DEG
             yaw += -self.manual_control.r * math.pi
-
-        self.set_attitude(roll, pitch, yaw)
-        self.set_thrust(z_ref=0.5)
-
-    def set_thrust(self, z_ref):
-        delta = z_ref - self.coordinate.z
-        thrust = Controller.BASE_THRUST + Controller.CONTROL_TO_THRUST * delta
-
-        if self.manual_control is not None:
             thrust = saturation(thrust, 0, self.manual_control.z)
+        self.__set_thrust(thrust)
+        self.__set_attitude(roll, pitch, yaw)
 
+    def __set_thrust(self, thrust):
         msg = Thrust()
         msg.header = Header()
         msg.header.frame_id = 'base_footprint'
         msg.header.stamp = rospy.Time.now()
         msg.thrust = thrust
         self.setpoint_thrust_pub.publish(msg)
+        rospy.loginfo('thrust(%.2f)' % (thrust))
 
-        rospy.loginfo('thrust(%.2f, %.2f)' % (delta, msg.thrust))
-
-    def set_attitude(self, roll, pitch, yaw):
+    def __set_attitude(self, roll, pitch, yaw):
         pos = PoseStamped()
         pos.header = Header()
         pos.header.frame_id = 'base_footprint'
         pos.header.stamp = rospy.Time.now()
-
         quaternion = quaternion_from_euler(roll, pitch, yaw)
         pos.pose.orientation = Quaternion(*quaternion)
         self.setpoint_attitude_pub.publish(pos)
-
         rospy.loginfo('attitude(%.2f, %.2f, %.2f)' % (roll, pitch, yaw))
 
 
