@@ -78,22 +78,12 @@ class Controller:
         rospy.loginfo('thrust(%.2f, %.2f)' % (delta, msg.thrust))
 
     def set_attitude(self, roll, pitch, yaw):
-        def wrap_to_pi(angle):
-            while angle > math.pi:
-                angle -= 2 * math.pi
-            while angle < -math.pi:
-                angle += 2 * math.pi
-            return angle
-
         pos = PoseStamped()
         pos.header = Header()
         pos.header.frame_id = 'base_footprint'
         pos.header.stamp = rospy.Time.now()
 
-        yaw = wrap_to_pi(yaw + Controller.DELTA_ANGLE)
-#        yaw = wrap_to_pi(yaw - self.attitude.yaw_delta)
-
-        quaternion = quaternion_from_euler(roll, -pitch, yaw)
+        quaternion = quaternion_from_euler(roll, pitch, yaw)
         pos.pose.orientation = Quaternion(*quaternion)
         self.setpoint_attitude_pub.publish(pos)
 

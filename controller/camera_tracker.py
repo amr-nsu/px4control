@@ -2,8 +2,9 @@ import tf
 import rospy
 
 from coordinate import Coordinate
+from std_msgs.msg import Header
 from tf.transformations import euler_from_quaternion
-
+from geometry_msgs.msg import PoseStamped
 
 class CameraTracker:
 
@@ -12,17 +13,32 @@ class CameraTracker:
         self.listener = tf.TransformListener()
         self.marker_id = marker_id
         self.coordinate = Coordinate()
-        rospy.Timer(rospy.Duration(0.01), lambda event: self.__timer_callback())
+        self.pose = PoseStamped()
+        rospy.Timer(rospy.Duration(0.1), lambda event: self.__timer_callback())
 
     def get_coordinate(self):
         return self.coordinate
 
+    def get_pose(self):
+        return self.pose
+
     def __timer_callback(self):
         try:
-            (p, q) = self.listener.lookupTransform('/world', self.marker_id, rospy.Time(0))
-            euler = euler_from_quaternion(q)
-            self.__update(Coordinate(p[0], p[1], p[2], euler[2]))
-        except:
+            (p_list, q_list) = self.listener.lookupTransform('/world', self.marker_id, rospy.Time(0))
+            self.pose.header = Header()
+            self.pose.header.stamp = rospy.Time.now()
+            self.pose.pose.position.x = p_list[0]
+            self.pose.pose.position.y = p_list[1]
+            self.pose.pose.position.z = p_list[2]
+            self.pose.pose.orientation.x = q_list[0]
+            self.pose.pose.orientation.y = q_list[1]
+            self.pose.pose.orientation.z = q_list[2]
+            self.pose.pose.orientation.w = q_list[3]
+            print p_list[0], p_list[1], p_list[2]
+            (roll, pitch, yaw) = euler_from_quaternion(q_list)
+#            print roll, pitch, yaw
+            self.__update(Coordinate(p_list[0], p_list[1], p_list[2], yaw))
+        except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
             pass
 
     def __update(self, coordinate):
@@ -34,5 +50,5 @@ if __name__ == '__main__':
     rospy.init_node('camera_tracker')
     cam_tracker = CameraTracker()
     while not rospy.is_shutdown():
-        print cam_tracker.get_coordinate()
+#        print cam_tracker.get_coordinate()
         rospy.sleep(0.1)
