@@ -7,13 +7,9 @@ class Algorithm:
 
     def loop(self):
         BASE_THRUST = 0.45
-        CONTROL_TO_THRUST = 0.2
+        DELTA_Z_TO_THRUST = 0.2
 
-        coordinate = self.controller.get_coordinate()
-
-        delta = self.z_ref - coordinate.z
-        thrust = BASE_THRUST + CONTROL_TO_THRUST * delta
-
+        thrust = BASE_THRUST \
+            + DELTA_Z_TO_THRUST * (self.z_ref - self.controller.get_position().z)
         roll, pitch, yaw = 0, 0, 0
-
         self.controller.set_control(roll, pitch, yaw, thrust)
