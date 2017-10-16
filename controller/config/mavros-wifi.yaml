@@ -1,0 +1,12 @@
+fcu_url: udp://:14550@192.168.4.1:14555
+#gcs_url: tcp-l://:5760
+gcs_url: udp://127.0.0.1:14556@127.0.0.1:14551
+
+setpoint_attitude:
+    use_quaternion: true
+
+local_position:
+    tf:
+        frame_id: world
+        child_frame_id: pixhawk
+        send: true

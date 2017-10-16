@@ -4,4 +4,4 @@ cd ${0%/*}
 
 source /opt/ros/kinetic/setup.bash || exit 1
 
-roslaunch run.launch
+python main.py
