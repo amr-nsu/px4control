@@ -3,4 +3,5 @@
           respawn="true" respawn_delay="1">
         <rosparam command="load" file="config/mavros-radio.yaml" />
     </node>
+    <node pkg="tf" type="static_transform_publisher" name="static_transform_publisher_local_origin_world" args="0 0 0 0 0 0 local_origin world 100" />
 </launch>

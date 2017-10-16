@@ -1,6 +1,3 @@
-BASE_THRUST = 0.45
-CONTROL_TO_THRUST = 0.2
-
 class Algorithm:
 
     def __init__(self, controller):
@@ -9,6 +6,9 @@ class Algorithm:
         self.controller.set_control_loop(0.01, self.loop)
 
     def loop(self):
+        BASE_THRUST = 0.45
+        CONTROL_TO_THRUST = 0.2
+
         coordinate = self.controller.get_coordinate()
 
         delta = self.z_ref - coordinate.z
