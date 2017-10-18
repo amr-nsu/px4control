@@ -33,7 +33,7 @@ class Algorithm:
         Az = vz*(k_z+alpha) + k_z*alpha*(z_gr - self.z_ref) - G
         Azz = Az
 
-        M1 = 0.4
+        M1 = 0.5
         norm_coef = 1.*0.45/(M1*G)
         thrust = norm_coef*(M1*sqrt(Azz*Azz))
         rospy.loginfo('thrust(%.2f) z %.2f vz %.2f x %.2f dx_gr %.2f' % (thrust, z_gr, vz, x_gr, dx_gr))
