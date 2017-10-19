@@ -4,5 +4,5 @@
         <rosparam command="load" file="config/mavros-wifi.yaml" />
     </node>
     <node pkg="tf" type="static_transform_publisher" name="static_transform_publisher_local_origin_world" args="0 0 0 0 0 0 local_origin world 100" />
-    <node pkg="rosbag" type="record" name="rosbag" args="record -a"/>
+    <node pkg="vision_pose" type="vision_pose" name="vision_pose" />
 </launch>

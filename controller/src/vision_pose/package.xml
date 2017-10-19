@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<package>
+  <name>vision_pose</name>
+  <version>0.0.1</version>
+  <description>vision_pose</description>
+  <maintainer email="michael@idisys.iae.nsk.su">Michael Filippov</maintainer>
+  <license>TODO</license>
+  <buildtool_depend>catkin</buildtool_depend>
+  <run_depend>rospy</run_depend>
+</package>

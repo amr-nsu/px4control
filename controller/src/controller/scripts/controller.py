@@ -6,6 +6,7 @@ from geometry_msgs.msg import PoseStamped, TwistStamped, Point, Quaternion, Vect
 from mavros_msgs.msg import ManualControl, Thrust
 from tf.transformations import quaternion_from_euler
 
+
 def saturation(value, lover_value, upper_value):
     if value < lover_value:
         return lover_value
@@ -25,13 +26,13 @@ class Controller:
 
         self.position = Point()
         self.orientation = Quaternion()
-        rospy.Subscriber("mavros/local_position/pose", PoseStamped,
-                 self.__local_position_pose_callback)
+        rospy.Subscriber('mavros/local_position/pose', PoseStamped,
+                         self.__local_position_pose_callback)
 
         self.linear_velocity = Vector3()
         self.angular_velocity = Vector3()
-        rospy.Subscriber("mavros/local_position/velocity", TwistStamped,
-                 self.__local_position_velocity_callback)
+        rospy.Subscriber('mavros/local_position/velocity', TwistStamped,
+                         self.__local_position_velocity_callback)
 
         self.manual_control = None
         rospy.Subscriber('mavros/manual_control/control', ManualControl,
@@ -57,7 +58,7 @@ class Controller:
 
     def set_control(self, roll, pitch, yaw, thrust):
         if self.manual_control is not None:
-            CONTROL_TO_DEG = 0.1
+            CONTROL_TO_DEG = 0.2
             roll += self.manual_control.y * CONTROL_TO_DEG
             pitch += self.manual_control.x * CONTROL_TO_DEG
             yaw += -self.manual_control.r * math.pi
