@@ -39,7 +39,7 @@ class VisionPose:
             if transform.child_frame_id == self.marker_id:
                 try:
                     (p_list, q_list) = self.transform_listener.lookupTransform('/world', self.marker_id, transform.header.stamp)
-                    x, y, z = p_list[0], p_list[1], p_list[2]
+                    (x, y, z) = p_list
                     if self.area.check(x, y, z):
                         pose = PoseStamped()
                         pose.header = Header()
