@@ -1,7 +1,7 @@
 <launch>
     <node pkg="mavros" type="mavros_node" name="mavros"
           respawn="true" respawn_delay="1">
-        <rosparam command="load" file="config/mavros-wifi.yaml" />
+        <rosparam command="load" file="config/mavros-serial.yaml" />
     </node>
     <node pkg="tf" type="static_transform_publisher" name="static_transform_publisher_local_origin_world" args="0 0 0 0 0 0 local_origin world 100" />
     <node pkg="vision_pose" type="vision_pose" name="vision_pose" />
