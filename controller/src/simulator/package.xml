@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<package>
+  <name>simulator</name>
+  <version>0.0.1</version>
+  <description>simulator</description>
+  <maintainer email="alexandr@idisys.iae.nsk.su">Alex Maltsev</maintainer>
+  <license>TODO</license>
+  <buildtool_depend>catkin</buildtool_depend>
+  <run_depend>rospy</run_depend>
+</package>

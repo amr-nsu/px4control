@@ -1,0 +1,75 @@
+#!/usr/bin/env python
+
+import rospy
+
+from model import Model
+from std_msgs.msg import Header
+from mavros_msgs.msg import Thrust
+from geometry_msgs.msg import PoseStamped, TwistStamped, Quaternion
+from tf.transformations import quaternion_from_euler, euler_from_quaternion
+
+
+class Simulator:
+
+    def __init__(self):
+        self.model = Model()
+        self.thrust = None
+        self.attitude = None
+
+        rospy.Subscriber('mavros/setpoint_attitude/target_attitude',
+                         PoseStamped, self.__setpoint_attitdute_callback)
+        rospy.Subscriber('mavros/setpoint_attitude/thrust',
+                         Thrust, self.__setpoint_thrust_callback)
+
+        self.local_position_pose_pub = rospy.Publisher('mavros/local_position/pose',
+                                                       PoseStamped, queue_size=1)
+        self.local_position_vel_pub = rospy.Publisher('mavros/local_position/velocity',
+                                                      TwistStamped, queue_size=1)
+
+        rospy.Timer(rospy.Duration(0.01), self.__model_step)
+
+    def __setpoint_thrust_callback(self, message):
+        self.thrust = message.thrust
+
+    def __setpoint_attitdute_callback(self, message):
+        self.attitude = message.pose.orientation
+
+    def __model_step(self, event):
+        if self.thrust is not None and self.attitude is not None:
+            quaternion = (self.attitude.x, self.attitude.y, self.attitude.z, self.attitude.w)
+            roll, pitch, yaw = euler_from_quaternion(quaternion)
+            self.model.step(pitch, self.thrust, 0.01)
+        self.__local_position_pose_publish()
+        self.__local_position_vel_publish()
+
+    def __local_position_pose_publish(self):
+        pos = PoseStamped()
+        pos.header = Header()
+        pos.header.frame_id = 'pixhawk'
+        pos.header.stamp = rospy.Time.now()
+        pos.pose.position.x = self.model.x
+        pos.pose.position.y = 0
+        pos.pose.position.z = self.model.z
+        roll, pitch, yaw = self.model.gamma, self.model.theta, 0
+        quaternion = quaternion_from_euler(roll, pitch, yaw)
+        pos.pose.orientation = Quaternion(*quaternion)
+        self.local_position_pose_pub.publish(pos)
+
+    def __local_position_vel_publish(self):
+        pos = TwistStamped()
+        pos.header = Header()
+        pos.header.frame_id = 'pixhawk'
+        pos.header.stamp = rospy.Time.now()
+        pos.twist.linear.x = self.model.dx
+        pos.twist.linear.y = 0
+        pos.twist.linear.z = self.model.dz
+        pos.twist.angular.x = self.model.dgamma
+        pos.twist.angular.y = self.model.dtheta
+        pos.twist.angular.z = 0
+        self.local_position_vel_pub.publish(pos)
+
+
+if __name__ == '__main__':
+    rospy.init_node('pixhawk')
+    simulator = Simulator()
+    rospy.spin()

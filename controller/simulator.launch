@@ -1,0 +1,6 @@
+<launch>
+    <node pkg="tf" type="static_transform_publisher" name="static_transform_publisher_local_origin_world" args="0 0 0 0 0 0 local_origin world 100" />
+    <node pkg="simulator" type="simulator" name="simulator" output="screen">
+        <rosparam command="load" file="config/mavros-serial.yaml" />
+    </node>
+</launch>
