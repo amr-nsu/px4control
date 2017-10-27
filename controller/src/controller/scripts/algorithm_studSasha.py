@@ -6,7 +6,7 @@ class Algorithm:
 
     def __init__(self, controller):
         self.controller = controller
-        self.z_ref = 0.5
+        self.z_ref = 0.8
         self.z = controller.get_position().z
         self.x_ref = 0.01
         self.x = controller.get_position().x
@@ -35,7 +35,7 @@ class Algorithm:
         # vz = (self.controller.get_position().z - self.z) / T
         vz = self.controller.get_linear_velocity().z
         self.z = self.controller.get_position().z
-        Az = 0 * vz * (k_z + alpha) + k_z * alpha * (z_gr - self.z_ref) - G
+        Az = vz * (k_z + alpha) + k_z * alpha * (z_gr - self.z_ref) - G
         Azz = Az
         vx = self.controller.get_linear_velocity().x
         Ax = vx * (k_x + betta) + k_x * betta * (x_gr - self.x_ref)
@@ -43,9 +43,9 @@ class Algorithm:
 
         M1 = 0.42
         norm_coef = 1. * 0.45 / (M1 * G)
-        thrust = norm_coef * (M1 * sqrt(Azz * Azz))
-        # thrust = norm_coef * (M1 * sqrt(Azz * Azz + Axx * Axx))
-        # pitch = atan(Axx / Azz)
+        #thrust = norm_coef * (M1 * sqrt(Azz * Azz))
+        thrust = norm_coef * (M1 * sqrt(Azz * Azz + Axx * Axx))
+        pitch = 10.*atan(Axx / Azz)
         rospy.loginfo('thrust(%.2f) z %.2f vz %.2f x %.2f dx_gr %.2f' % (thrust, z_gr, vz, x_gr, dx_gr))
         self.log_model.write("%f %f %f %f %f %f %f\n" % (self.time(), thrust, z_gr, vz, x_gr, dx_gr, pitch))
         self.log_model.flush()
