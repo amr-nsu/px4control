@@ -112,8 +112,8 @@
       <self_collide>0</self_collide>
       <kinematic>0</kinematic>
     </link>
-    <link name='link_0'>
-      <pose frame=''>1 -0 0.05 0 0 0</pose>
+    <link name='cargo_link'>
+      <pose frame=''>1 -0 0.05 0 1.57 0</pose>
       <inertial>
         <mass>0.01</mass>
         <inertia>
@@ -621,8 +621,8 @@
         </ode>
       </physics>
     </joint>
-    <joint name='link_0_JOINT_0' type='ball'>
-      <parent>link_0</parent>
+    <joint name='cargo_link_joint' type='ball'>
+      <parent>cargo_link</parent>
       <child>base_link</child>
       <pose frame=''>0 0 0 0 -0 0</pose>
       <axis>
@@ -976,6 +976,12 @@
       <accelerometerRandomWalk>0.006</accelerometerRandomWalk>
       <accelerometerBiasCorrelationTime>300.0</accelerometerBiasCorrelationTime>
       <accelerometerTurnOnBiasSigma>0.196</accelerometerTurnOnBiasSigma>
+    </plugin>
+    <plugin name="ground_truth" filename="libgazebo_ros_p3d.so">
+      <frameName>map</frameName>
+      <bodyName>cargo_link</bodyName>
+      <topicName>odom</topicName>
+      <updateRate>40.0</updateRate>
     </plugin>
   </model>
 </sdf>
