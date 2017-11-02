@@ -981,7 +981,7 @@
       <frameName>map</frameName>
       <bodyName>cargo_link</bodyName>
       <topicName>odom</topicName>
-      <updateRate>40.0</updateRate>
+      <updateRate>50.0</updateRate>
     </plugin>
   </model>
 </sdf>
