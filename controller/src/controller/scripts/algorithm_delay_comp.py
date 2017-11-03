@@ -20,6 +20,7 @@ class Algorithm:
      def __init__(self, controller):
         self.controller = controller
         self.z_ref = 0.8
+        self.themodel = Model(z = 0)
         self.z = controller.get_position().z
         self.x = controller.get_position().x
         self.counter = 0
@@ -38,25 +39,24 @@ class Algorithm:
         n_delay = 50
         
         z_gr = self.controller.get_position().z
-        vz = self.controller.get_linear_velocity().z
-        
-        themodel = Model(z = z_gr)
+        vz = self.controller.get_linear_velocity().z       
 
-        Az = vz * (k_z + alpha) + k_z * alpha * (z_gr - self.z_ref) - G
+        Az = self.themodel.dz * (k_z + alpha) + k_z * alpha * (self.themodel.z - self.z_ref) - G
 
         Azz = Az
 
         M1 = 0.42
         norm_coef = 1. * 0.45 / (M1 * G)
-        if (self.counter < n_delay):
-          thrust = norm_coef * (M1 * sqrt(Azz * Azz))
-        else:
-          themodel.z = z_gr
-          themodel.dz = vz
+        
+        thrust = norm_coef * (M1 * sqrt(Azz * Azz))      
+        if (self.counter > n_delay):
+        
+          self.themodel.z = z_gr
+          self.themodel.dz = vz
           
            for ii in range(0,n_delay):
-                model1.step(0, thrust_buf[self.counter + ii-n_delay],DT)
-           thrust = norm_coef*thrust_buf[self.counter - n_delay]
+                self.themodel.step(0, thrust_buf[self.counter + ii-n_delay],0.01)
+        #   thrust = norm_coef*thrust_buf[self.counter - n_delay]
         #thrust = norm_coef * (M1 * sqrt(Azz * Azz + Axx * Axx)
 
         rospy.loginfo('thrust(%.2f) z %.2f vz %.2f x %.2f vx %.2f' % (thrust, z_gr, vz, x_gr, vx))
