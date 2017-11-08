@@ -10,9 +10,10 @@ class Algorithm:
         self.controller = controller
         self.z_ref = 1.8
         self.z = controller.get_position().z
-        self.x_ref = 0.1
+        self.dx_ref = 0.1
         self.y_ref = 0.01
         self.gamma = 0.0
+        self.counter = 0
         self.x = controller.get_position().x
         self.time_start = self.controller.get_time()
         self.log_model = open('log/%s_regulation' % self.time_start, 'w')
@@ -33,13 +34,18 @@ class Algorithm:
         # vz = (self.controller.get_position().z - self.z) / T
         # self.z = self.controller.get_position().z
         L = 1.0
-        M2 = 0.01
+        M2 = 0.1
         M1 = 0.42
 
+         
+        if ((self.counter) % 50 == 0):
+            self.dx_ref = -1.*self.dx_ref
+            #theta_ref = -1*theta_ref
+            
         gamma = self.gamma
         vgamma = 0 # FIXME
         gamma = 0
-
+        
         # !!define gamma & vgamma & L & M2!! y??
         x_gr = self.controller.get_position().x + L * sin(gamma)
         y_gr = self.controller.get_position().y
@@ -50,7 +56,8 @@ class Algorithm:
         vz = self.controller.get_linear_velocity().z + vgamma * L * sin(gamma)
 
         Az = M1*L*vgamma*vgamma*cos(gamma)/(M1+M2) + vz * (k_z + alpha) + k_z * alpha * (z_gr - self.z_ref) - G
-        Ax = -M1*L*vgamma*vgamma*sin(gamma)/(M1+M2) + vx * (k_x + betta) + k_x * betta * (x_gr - self.x_ref)
+      #  Ax = -M1*L*vgamma*vgamma*sin(gamma)/(M1+M2) + vx * (k_x + betta) + k_x * betta * (x_gr - self.x_ref)
+        Ax = -M1*L*vgamma*vgamma*sin(gamma)/(M1+M2) + betta*(dx_gr - self.dx_ref)
         Ay = vy * (k_x + betta) + k_x * betta * (y_gr - self.y_ref)
 
         Azz = Az  - 1.*sin(gamma)*M1*((alpha2+k_gamma)*vgamma+alpha2*k_gamma*gamma)/(M1+M2)
@@ -70,6 +77,7 @@ class Algorithm:
         self.log_model.flush()
 
         self.controller.set_control(roll, pitch, yaw, thrust)
+        self.counter += 1
 
     def time(self):
         return self.controller.get_time() - self.time_start
