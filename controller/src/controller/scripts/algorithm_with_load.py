@@ -10,7 +10,7 @@ class Algorithm:
         self.controller = controller
         self.z_ref = 1.8
         self.z = controller.get_position().z
-        self.dx_ref = 0.1
+        self.dx_ref = 0.5
         self.y_ref = 0.01
         self.gamma = 0.0
         self.counter = 0
@@ -38,7 +38,7 @@ class Algorithm:
         M1 = 0.42
 
          
-        if ((self.counter) % 50 == 0):
+        if ((self.counter) % 100 == 0):
             self.dx_ref = -1.*self.dx_ref
             #theta_ref = -1*theta_ref
             
