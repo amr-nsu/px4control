@@ -57,7 +57,7 @@ class Algorithm:
 
         Az = M1*L*vgamma*vgamma*cos(gamma)/(M1+M2) + vz * (k_z + alpha) + k_z * alpha * (z_gr - self.z_ref) - G
       #  Ax = -M1*L*vgamma*vgamma*sin(gamma)/(M1+M2) + vx * (k_x + betta) + k_x * betta * (x_gr - self.x_ref)
-        Ax = -M1*L*vgamma*vgamma*sin(gamma)/(M1+M2) + betta*(dx_gr - self.dx_ref)
+        Ax = -M1*L*vgamma*vgamma*sin(gamma)/(M1+M2) + betta*(vx - self.dx_ref)
         Ay = vy * (k_x + betta) + k_x * betta * (y_gr - self.y_ref)
 
         Azz = Az  - 1.*sin(gamma)*M1*((alpha2+k_gamma)*vgamma+alpha2*k_gamma*gamma)/(M1+M2)
