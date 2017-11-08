@@ -36,11 +36,11 @@ class Algorithm:
         L = 1.0
         M2 = 0.1
         M1 = 0.42
-
+        pitch = 0.05
          
         if ((self.counter) % 1000 == 0):
-            self.dx_ref = -1.*self.dx_ref
-            #theta_ref = -1*theta_ref
+           # self.dx_ref = -1.*self.dx_ref
+            pitch = -1*pitch
             
         gamma = self.gamma
         vgamma = 0 # FIXME
