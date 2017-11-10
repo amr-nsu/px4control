@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 
 import rospy
-from algorithm_studSasha import Algorithm
+# from algorithm_studSasha import Algorithm
+#from algorithm_with_load_without_reg import Algorithm
+from algorithm_with_load import Algorithm
 # from algorithm_01 import Algorithm
 # from algorithm_relay import Algorithm
 from controller import Controller

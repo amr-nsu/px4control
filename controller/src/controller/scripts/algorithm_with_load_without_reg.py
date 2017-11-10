@@ -18,6 +18,9 @@ class Algorithm:
         self.time_start = self.controller.get_time()
         self.log_model = open('log/%s_regulation' % self.time_start, 'w')
         self.controller.set_control_loop(0.01, self.loop)
+
+        self.pitch = 1.
+
         rospy.Subscriber('/odom', Odometry, self.__odometry_callback)
 
     def loop(self):
@@ -36,16 +39,17 @@ class Algorithm:
         L = 1.0
         M2 = 0.1
         M1 = 0.42
-        pitch = 0.05
-         
+
         if ((self.counter) % 1000 == 0):
-           # self.dx_ref = -1.*self.dx_ref
-            pitch = -1*pitch
-            
+            # self.dx_ref = -1.*self.dx_ref
+            self.pitch = - self.pitch
+
+        pitch = self.pitch
+
         gamma = self.gamma
         vgamma = 0 # FIXME
         gamma = 0
-        
+
         # !!define gamma & vgamma & L & M2!! y??
         x_gr = self.controller.get_position().x + L * sin(gamma)
         y_gr = self.controller.get_position().y
@@ -68,10 +72,15 @@ class Algorithm:
 
         norm_coef = 1. * 0.45 / (M1 * G)
         # thrust = norm_coef * (M1 * sqrt(Azz * Azz))
-        thrust = norm_coef * (M1+M2)*G
+        # thrust = norm_coef * (M1+M2)*G
+
+        z_ref = 2.8
+        thrust = 0.45 \
+            + 0.1 * (z_ref - self.controller.get_position().z) \
+            - 0.01 * self.controller.get_linear_velocity().z
 
         rospy.loginfo('thrust(%.2f) z %.2f vz %.2f x %.2f vx %.2f' % (thrust, z_gr, vz, x_gr, vx))
-        self.log_model.write("%f %f %f %f %f %f %f %f %f %f %f %f %f %f\n" % (self.time(), thrust, z_gr, vz, pitch, x_gr, vx, roll, y_gr, vy, yaw, Axx, Ayy, Azz))
+        self.log_model.write("%f %f %f %f %f %f %f %f %f %f %f %f %f %f %f\n" % (self.time(), thrust, z_gr, vz, pitch, x_gr, vx, roll, y_gr, vy, yaw, Axx, Ayy, Azz, self.gamma))
         self.log_model.flush()
 
         self.controller.set_control(roll, pitch, yaw, thrust)
