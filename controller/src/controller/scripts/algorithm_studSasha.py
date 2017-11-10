@@ -18,7 +18,7 @@ class Algorithm:
     def loop(self):
         roll, pitch, yaw = 0, 0, 0
 
-        k_z = 1.5
+        k_z = 2.# 1.5
         alpha = k_z
         k_x = 0.3
         betta = k_x
@@ -45,10 +45,10 @@ class Algorithm:
 
         M1 = 0.42
         norm_coef = 1. * 0.45 / (M1 * G)
-        # thrust = norm_coef * (M1 * sqrt(Azz * Azz))
-        thrust = norm_coef * (M1 * sqrt(Azz * Azz + Axx * Axx))
-        pitch = 10.0 * atan(Axx / Azz)
-        roll = -10.0 * atan(Ayy / Azz)
+        thrust = norm_coef * (M1 * sqrt(Azz * Azz))
+        #thrust = norm_coef * (M1 * sqrt(Azz * Azz + Axx * Axx))
+       # pitch = 10.0 * atan(Axx / Azz)
+       # roll = -10.0 * atan(Ayy / Azz)
 
         rospy.loginfo('thrust(%.2f) z %.2f vz %.2f x %.2f vx %.2f' % (thrust, z_gr, vz, x_gr, vx))
         self.log_model.write("%f %f %f %f %f %f %f %f %f %f %f %f %f %f\n" % (self.time(), thrust, z_gr, vz, pitch, x_gr, vx, roll, y_gr, vy, yaw, Axx, Ayy, Azz))
