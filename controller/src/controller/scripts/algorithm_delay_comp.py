@@ -48,13 +48,14 @@ class Algorithm:
         M1 = 0.42
         norm_coef = 1. * 0.45 / (M1 * G)
         
-        thrust = norm_coef * (M1 * sqrt(Azz * Azz))      
+        thrust = norm_coef * (M1 * sqrt(Azz * Azz))  
+            
         if (self.counter > n_delay):
         
-          self.themodel.z = z_gr
-          self.themodel.dz = vz
+            self.themodel.z = z_gr
+            self.themodel.dz = vz
           
-           for ii in range(0,n_delay):
+            for ii in range(0,n_delay):
                 self.themodel.step(0, thrust_buf[self.counter + ii-n_delay],0.01)
         #   thrust = norm_coef*thrust_buf[self.counter - n_delay]
         #thrust = norm_coef * (M1 * sqrt(Azz * Azz + Axx * Axx)

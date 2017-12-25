@@ -10,7 +10,7 @@ class Algorithm:
         self.controller = controller
         self.z_ref = 1.8
         self.z = controller.get_position().z
-        self.dx_ref = 0.5
+        self.dx_ref = 1.5
         self.y_ref = 0.01
         self.gamma = 0.0
         self.counter = 0
@@ -37,15 +37,15 @@ class Algorithm:
         M2 = 0.1
         M1 = 0.42
 
-         
+
         if ((self.counter) % 1000 == 0):
             self.dx_ref = -1.*self.dx_ref
             #theta_ref = -1*theta_ref
-            
+
         gamma = self.gamma
         vgamma = 0 # FIXME
         gamma = 0
-        
+
         # !!define gamma & vgamma & L & M2!! y??
         x_gr = self.controller.get_position().x + L * sin(gamma)
         y_gr = self.controller.get_position().y
@@ -73,7 +73,7 @@ class Algorithm:
         roll = -10.0 * atan(Ayy / Azz)
 
         rospy.loginfo('thrust(%.2f) z %.2f vz %.2f x %.2f vx %.2f' % (thrust, z_gr, vz, x_gr, vx))
-        self.log_model.write("%f %f %f %f %f %f %f %f %f %f %f %f %f %f\n" % (self.time(), thrust, z_gr, vz, pitch, x_gr, vx, roll, y_gr, vy, yaw, Axx, Ayy, Azz))
+        self.log_model.write("%f %f %f %f %f %f %f %f %f %f %f %f %f %f %f\n" % (self.time(), thrust, z_gr, vz, pitch, x_gr, vx, roll, y_gr, vy, yaw, Axx, Ayy, Azz, self.gamma))
         self.log_model.flush()
 
         self.controller.set_control(roll, pitch, yaw, thrust)
@@ -88,4 +88,4 @@ class Algorithm:
                                                   orientation.y,
                                                   orientation.z,
                                                   orientation.w))
-        self.gamma = pitch
+        self.gamma = -pitch

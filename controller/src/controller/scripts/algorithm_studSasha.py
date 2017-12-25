@@ -6,10 +6,14 @@ class Algorithm:
 
     def __init__(self, controller):
         self.controller = controller
-        self.z_ref = 0.8
+        self.z_ref = 1.5
         self.z = controller.get_position().z
-        self.x_ref = 0.1
+        self.x_ref = 0.
         self.y_ref = 0.01
+
+        self.delta = 0.0  # was 0.4
+        self.counter = 0
+
         self.x = controller.get_position().x
         self.time_start = self.controller.get_time()
         self.log_model = open('log/%s_regulation' % self.time_start, 'w')
@@ -35,6 +39,12 @@ class Algorithm:
         vy = self.controller.get_linear_velocity().y
         vz = self.controller.get_linear_velocity().z
 
+        if self.counter % 1000 < 1:
+            self.delta *= -1.
+        # self.z_ref = 0.8 + self.delta
+        self.x_ref = 0. + self.delta
+        self.counter += 1
+
         Az = vz * (k_z + alpha) + k_z * alpha * (z_gr - self.z_ref) - G
         Ax = vx * (k_x + betta) + k_x * betta * (x_gr - self.x_ref)
         Ay = vy * (k_x + betta) + k_x * betta * (y_gr - self.y_ref)
@@ -50,8 +60,8 @@ class Algorithm:
         pitch = 10.0 * atan(Axx / Azz)
         roll = -10.0 * atan(Ayy / Azz)
 
-        rospy.loginfo('thrust(%.2f) z %.2f vz %.2f x %.2f vx %.2f' % (thrust, z_gr, vz, x_gr, vx))
-        self.log_model.write("%f %f %f %f %f %f %f %f %f %f %f %f %f %f\n" % (self.time(), thrust, z_gr, vz, pitch, x_gr, vx, roll, y_gr, vy, yaw, Axx, Ayy, Azz))
+        rospy.loginfo('thrust(%.2f) z %.2f vz %.2f z_ref %.2f x %.2f vx %.2f x_ref %.2f y_gr %.2f vy %.2f y_ref %.2f' % (thrust, z_gr, vz, self.z_ref, x_gr, vx, self.x_ref, y_gr, vy, self.y_ref))
+        self.log_model.write("%f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f\n" % (self.time(), thrust, z_gr, vz, pitch, x_gr, vx, roll, y_gr, vy, yaw, Axx, Ayy, Azz, self.z_ref, self.x_ref, self.y_ref))
         self.log_model.flush()
 
         self.controller.set_control(roll, pitch, yaw, thrust)
