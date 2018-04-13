@@ -6,6 +6,7 @@ import tf
 from tf2_msgs.msg import TFMessage
 from std_msgs.msg import Header
 from geometry_msgs.msg import PoseStamped
+from ar_track_alvar_msgs.msg import AlvarMarkers
 
 
 class Area:
@@ -28,17 +29,24 @@ class VisionPose:
 
     def __init__(self):
         self.marker_id = 'ar_marker_0'
+        self.marker_id2 = 'ar_marker_2'
         self.area = Area(-1.5, 1.5, -1.5, 1.5, -0.5, 2.0)
         self.transform_listener = tf.TransformListener()
         rospy.Subscriber("tf", TFMessage,
                          self.__tf_message_callback)
 
+        #rospy.Subscriber("ar_pose_marker", AlvarMarkers, self.__frameid_callback)
+
         self.vision_pose_estimate_pose_pub = rospy.Publisher('mavros/vision_pose/pose',
                                                              PoseStamped, queue_size=1)
+        self.vision_pose_estimate_pose2_pub = rospy.Publisher('mavros/vision_pose2/pose',
+                                                             PoseStamped, queue_size=1)
+
 
     def __tf_message_callback(self, msg):
         for transform in msg.transforms:
-            if transform.child_frame_id == self.marker_id:
+            #rospy.logdebug('%s %s' % (transform.child_frame_id, transform.header.frame_id))
+            if (transform.child_frame_id == self.marker_id) and (transform.header.frame_id == 'camera'):
                 try:
                     (p_list, q_list) = self.transform_listener.lookupTransform('/world', self.marker_id, transform.header.stamp)
                     (x, y, z) = p_list
@@ -56,9 +64,28 @@ class VisionPose:
                         self.vision_pose_estimate_pose_pub.publish(pose)
                 except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException), e:
                     rospy.logwarn(e)
-
+            if (transform.child_frame_id == self.marker_id2) and (transform.header.frame_id == 'camera2'):
+                try:
+                    (p_list, q_list) = self.transform_listener.lookupTransform('/world', self.marker_id2, transform.header.stamp)
+                    (x, y, z) = p_list
+                    if self.area.check(x, y, z):
+                        pose = PoseStamped()
+                        pose.header = Header()
+                        pose.header.stamp = transform.header.stamp
+                        pose.pose.position.x = x
+                        pose.pose.position.y = y
+                        pose.pose.position.z = z
+                        pose.pose.orientation.x = q_list[0]
+                        pose.pose.orientation.y = q_list[1]
+                        pose.pose.orientation.z = q_list[2]
+                        pose.pose.orientation.w = q_list[3]
+                        self.vision_pose_estimate_pose2_pub.publish(pose)
+                except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException), e:
+                    rospy.logwarn(e)
+    def __frameid_callback(self,msg):
+        pass
 
 if __name__ == '__main__':
-    rospy.init_node('vision_pose')
+    rospy.init_node('vision_pose', log_level=rospy.DEBUG)
     v = VisionPose()
     rospy.spin()

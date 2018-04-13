@@ -1,4 +1,11 @@
 <launch>
     <include file="run-camera-1280x720.launch"/>
+    <!--include file="run-camera-1920x1080.launch"/-->
     <include file="run-track.launch"/>
+
+<!--
+    <include file="run-camera2-1280x720.launch"/>
+    <include file="run-track2.launch"/>
+-->
+
 </launch>

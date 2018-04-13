@@ -1,0 +1,102 @@
+from geometry_msgs.msg import Point, Vector3
+import math
+
+def f(x, y):
+	return x*x + y*y - 1
+
+def z_ref(x, y):
+	return 0,5
+
+def v_ref(x, y):
+	return 0,25
+
+class DerivCalc:
+	def __init__(self, initial_value):
+		self.last_value = initial_value
+		self.derivative = 0
+
+	def update(self, value, delta):
+		self.derivative = (value - self.last_value) / delta
+		self.last_value = value
+
+	def get(self):
+		return self.derivative
+
+class Algorithm:
+
+	def __init__(self, controller):
+		self.controller = controller
+		self.df_dx = DerivCalc(0)
+		self.df_dy = DerivCalc(0)
+		self.df_dt = DerivCalc(0)
+		self.d2f_dxx = DerivCalc(0)
+		self.d2f_dyy = DerivCalc(0)
+		self.d2f_dxy = DerivCalc(0)
+	        self.z_ref = 0.5
+		self.a_f = 1
+		self.a_z = 1
+		self.a_v = 1
+		self.k_f = 1
+		self.k_z = 1
+		self.mass = 1.5
+		self.g = 9.81
+		self.u = [0, 0, 0, 0]
+	        self.controller.set_control_loop(0.01, self.loop)
+
+	def loop(self):
+		self.__update()
+		self.__calculate_u()
+		self.controller.set_actuator_control([1200, 1200, 1200, 1200, 0, 0, 0, 0])
+
+
+	def __calculate_u(self):
+		S_f = self.df_dt.get() + self.k_f * self.f
+		S_z = self.dzz_dt.get() + self.k_z * (self.position.z - self.z_ref)
+		S_v = self.speed - self.v_ref
+		A = -self.a_f * S_f - self.k_f * (self.df_dx.get() * self.l_velocity.x + self.df_dy.get() * self.l_velocity.y) - 2 * self.d2f_dxy.get() * self.l_velocity.x * self.l_velocity.y - self.d2f_dxx.get() * self.l_velocity.x * self.l_velocity.x - self.d2f_dyy.get() * self.l_velocity.y * self.l_velocity.y
+		B = -self.a_v * S_v
+		C = -self.a_z * S_z - self.k_z * self.l_velocity.z
+		D = self.df_dx.get() * self.l_velocity.y - self.df_dx.get() * self.l_velocity.x
+		D_1 = A * self.l_velocity.y - B * self.speed * self.df_dy.get()
+		D_2 = B * self.speed * self.df_dx.get() - A * self.l_velocity.x
+		DD = math.sqrt((D_1/D)**2 + (D_2/D)**2 + (self.g + C)**2)
+
+		gamma = ( D_1/D/DD, D_2/D/DD, (self.g + C)/DD )
+		angle_ref = self.__calculate_ref_angles(gamma)
+
+		self.u[0] = self.mass * DD
+
+	def __calculate_ref_angles(self, gamma):
+		angles = Vector3()
+
+
+	def __update(self):
+		time = self.controller.get_time()
+		position = self.controller.get_vision_position()
+		euler = self.controller.get_euler()
+		l_velocity = self.controller.get_linear_velocity()
+
+		time_delta = time - self.last_update_time
+		pos_delta = position - self.position
+		euler_delta = euler - self.euler
+		linear_vel_delta = l_velocity - self.linear_velocity
+
+		self.last_update_time = time
+		self.position = position
+		self.euler = euler
+		self.linear_velocity = l_velocity
+
+		self.speed = math.hypot(self.l_velocity.x, self.l_velocity.y)self.f = f(position.x, position.y)
+		self.z_ref = z_ref(x, y)
+		self.v_ref = v_ref(x, y)
+
+		self.df_dx.update(f, pos_delta.x)
+		self.df_dy.update(f, pos_delta.y)
+		self.df_dt.update(f, time_delta)
+		self.dzz_dt.update((position.z - self.z_ref), time_delta)
+
+		self.d2f_dxx.update(self.df_dx.get(), pos_delta.x)
+		self.d2f_dyy.update(self.df_dy.get(), pos_delta.y)
+		self.d2f_dxy.update(self.df_dx.get(), pos_delta.y)
+
+

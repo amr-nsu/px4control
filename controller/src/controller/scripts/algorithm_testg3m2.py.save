@@ -1,0 +1,49 @@
+class DerivCalc:
+	def __init__(self, initial_value = 0):
+		self.last_value = initial_value
+		self.derivative = 0
+
+	def update(self, value, delta):
+		self.derivative = (value - self.last_value) / delta
+		self.last_value = value
+
+	def get_derivative(self):
+		return self.derivative
+
+class Algorithm:
+
+	def __init__(self, controller):
+        	self.controller = controller
+		self.df_dx = DerivCacl(0)
+		self.df_dy = DerivCacl(0)
+		self.df_dt = DerivCacl(0)
+		self.df2_dxx = DerivCacl(0)
+		self.df2_dyy = DerivCacl(0)
+		self.df2_dxy = DerivCacl(0)
+		self.ddz_dt = DerivCacl(0)
+
+		self.a = Point(1, 1, 1)
+		self.k = Point(1, 1, 1)
+
+		self.f
+		self.z_ref
+		self.v_ref
+
+		self.position = Point()
+		self.velocity = Vector3()
+
+	        self.controller.set_control_loop(0.01, self.loop)
+
+	def loop(self):
+		z = self.controller.get_position().z;
+		dz = self.controller.get_linear_velocity().z;
+		thrust = -(self.a_z + self.k_z) * dz - a_z * k_z * (z - z_ref)
+        	roll, pitch, yaw = 0, 0, 0
+		#self.controller.set_control(roll, pitch, yaw, thrust)
+		self.controller.set_actuator_control([1200, 1200, 1200, 1200, 0, 0, 0, 0])
+
+	def update():
+		
+		self.position = self.controller.get_vision_position()		self.velocity = self.controller.get_linear_velocity()
+		self.df_dx.update()
+		self.position = Point()
