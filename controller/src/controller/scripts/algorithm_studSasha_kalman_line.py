@@ -120,7 +120,7 @@ class Algorithm:
         self.y_load += self.y_load_dot * dt
         self.z_load_dot += (-self.k1_dxy * self.z_load_dot - self.k2_dxy * self.z_load + self.k_dxy * z_load) * dt
         self.z_load += self.z_load_dot * dt
-	
+
 	gamma = 0.
 	if (z_load - z_cam) != 0:
 		gamma = atan((y_cam - y_load)/(z_load-z_cam))
@@ -200,7 +200,7 @@ class Algorithm:
                 % (self.time(), self.x_estimated[0], self.x_estimated[1], self.x_estimated[2], self.x_estimated[3], self.x_estimated[4], self.x_estimated[5], self.x_estimated[6], self.x_estimated[7], self.x_estimated[8], self.x_estimated[9], self.x_estimated[10], self.x_estimated[11], psi, phi, theta))
         self.log_kalman.flush()
 
-#---------------------------------------------------------
+#--------------------------------------------------------- FOR GAMMA ESTIMATION
 
 
 
@@ -251,13 +251,6 @@ class Algorithm:
 	self.log_kalman_gamma.write('%s %s %s %s %s %s  %s %s %s\n' \
                 % (self.time(), self.x_gamma_estimated[0], self.x_gamma_estimated[1], self.x_gamma_estimated[2], self.x_gamma_estimated[3], self.x_gamma_estimated[4], self.x_gamma_estimated[5], self.x_gamma_estimated[6], self.x_gamma_estimated[7]))
         self.log_kalman_gamma.flush()
-
-
-
-
-
-
-
 
 
 #---------------------------------------------------------
@@ -345,6 +338,11 @@ class Algorithm:
         self.model.x, self.model.y, self.model.z, self.model.dot.x, self.model.dot.y, self.model.dot.z, self.model.psi, self.model.phi, self.model.theta, self.model.dot.psi, self.model.dot.phi, self.model.dot.theta = self.x_estimated
         self.model.set_control(self.control)
         self.model.step(dt)
+
+
+        self.model_gamma.x, self.model_gamma.z, self.model_gamma.dx, self.model_gamma.dz, self.model_gamma.theta, self.model_gamma.gamma, self.model_gamma.dtheta, self.model_gamma.dgamma = self.x_gamma_estimated
+        self.model_gamma.set_control([self.control[0], 0., 0., self.control[2]])
+        self.model_gamma.step(dt)
 
 
 
