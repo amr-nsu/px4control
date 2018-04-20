@@ -118,7 +118,7 @@ class Algorithm:
         self.x_load += self.x_load_dot * dt
         self.y_load_dot += (-self.k1_dxy * self.y_load_dot - self.k2_dxy * self.y_load + self.k_dxy * y_load) * dt
         self.y_load += self.y_load_dot * dt
-        self.z_load_dot += (-self.k1_dxy * self.z_load_dot - self.k2_dxy * self.z_cam + self.k_dxy * z_cam) * dt
+        self.z_load_dot += (-self.k1_dxy * self.z_load_dot - self.k2_dxy * self.z_load + self.k_dxy * z_load) * dt
         self.z_load += self.z_load_dot * dt
 	
 	gamma = 0.
