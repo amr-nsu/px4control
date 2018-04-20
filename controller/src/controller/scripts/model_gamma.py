@@ -8,13 +8,10 @@ from libstd import angle_to_pi
 from numpy import *
 
 
-M1 = 0.5     # kg
-M2 = M1*0.3
-L = 0.4 #m
+
 m_real = 0.5
 
 G = 9.81     # m/c^2
-MG = M * G
 #Ixx = 1.
 Iyy = 0.167
 #Izz = 1.
@@ -87,10 +84,10 @@ class Model:
 
         # init control
         self.u = (0., 0., 0., 0.)
-	self.M1 = 0.
-	self.M2 = 0.
-	self.Iyy = 0.
-	self.L = 0.
+	self.M1 = 0.6
+	self.M2 = 0.2
+	self.Iyy = 0.1
+	self.L = 0.4
 
 
     def set_control(self, u):
@@ -98,19 +95,19 @@ class Model:
 
     def step(self, dt):
 	
-	d2theta = self.u[3]/Iyy
+	d2theta = self.u[3]/self.Iyy
 	self.dtheta += d2theta*dt
 	self.theta += self.dtheta*dt
 
-	d2gamma = (-self.u[1]*sin(self.theta+self.gamma))/(M1*L)
+	d2gamma = (-self.u[1]*sin(self.theta+self.gamma))/(self.M1*self.L)
 	self.dgamma += d2gamma*dt
 	self.gamma +=self.dgamma*dt
 
-	d2x = (self.u[1]*sin(self.theta) +M2*L*(sin(self.gamma)*self.dgamma*self.dgamma - cos(self.gamma)*d2gamma))/(M1+M2)
+	d2x = (self.u[1]*sin(self.theta) +self.M2*self.L*(sin(self.gamma)*self.dgamma*self.dgamma - cos(self.gamma)*d2gamma))/(self.M1+self.M2)
 	self.dx += d2x*dt
 	self.x += self.dx*dt
 
-	d2z = (self.u[1]*cos(self.theta) - (M1+M2)*G + M2*L*(-cos(self.gamma)*self.dgamma*self.dgamma - sin(self.gamma)*d2gamma))/(M1+M2)
+	d2z = (self.u[1]*cos(self.theta) - (self.M1+self.M2)*G + self.M2*self.L*(-cos(self.gamma)*self.dgamma*self.dgamma - sin(self.gamma)*d2gamma))/(self.M1+self.M2)
 	self.dz += d2z*dt
 	self.z += self.dz*dt
 

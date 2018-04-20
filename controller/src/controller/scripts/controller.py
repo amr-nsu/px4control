@@ -142,12 +142,15 @@ class Controller:
 	
 
     def __vision_position_pose_callback(self, message):
-        self.vision_position = message.pose.position
+        self.vision_position = message.pose.position	
+	self.orientation = message.pose.orientation
+	self.euler = euler_from_quaternion([self.orientation.x,self.orientation.y,self.orientation.z,self.orientation.w])
+
 
     def __vision_position_pose_load_callback(self, message):
         self.vision_position_load = message.pose.position
 	self.orientation_load = message.pose.orientation
-	self.euler_load = euler_from_quaternion([self.orientation_load.x, self.orientation_load.y,self.orientation_load.z,self.orientation_load.w])
+	self.euler_load = euler_from_quaternion([self.orientation_load.x,self.orientation_load.y,self.orientation_load.z,self.orientation_load.w])
 
 
     def __local_position_velocity_callback(self, message):

@@ -4,6 +4,7 @@ from math import *
 
 import model
 from kalman_quadro import Kalman
+from kalman_quadro_gamma import Kalman_Gamma
 from numpy import *
 import model_gamma
 
@@ -64,16 +65,18 @@ class Algorithm:
 	self.model_gamma_ref = model_gamma.Model()
 
         self.kalman = Kalman()
-        self.x_estimated = array([0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 1.], dtype = double)
-        self.covariances = 0.0*eye(13)
+        self.x_estimated = array([0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.], dtype = double)
+        self.covariances = 0.1*eye(12)
 
+	self.kalman_gamma = Kalman_Gamma()
 	self.x_gamma_estimated = array([0., 0., 0., 0., 0., 0., 0., 0.], dtype = double)
-	self.covariances_gamma = 0.0*eye(8)
+	self.covariances_gamma = 0.1*eye(8)
 
         self.control = [0.,0.,0.,0.]
 
 
-        self.delay1 = 15 #10
+        self.delay1 = 0 #10
+	self.delay2 = 0
         self.u1_q = model.Variable_With_Delay(delay=self.delay1)
         self.u2_q = model.Variable_With_Delay(delay=self.delay1)
         self.u3_q = model.Variable_With_Delay(delay=self.delay1)
@@ -84,6 +87,7 @@ class Algorithm:
         self.log_model = open('log/%s_regulation' % self.time_start, 'w')
         self.log_kalman = open('log/%s_kalman' % self.time_start, 'w')
         self.log_vision = open('log/%s_vision' % self.time_start, 'w')
+	self.log_kalman_gamma = open('log/%s_kalman_gamma' % self.time_start, 'w')
 
         self.controller.set_control_loop(0.01, self.loop)
 
@@ -128,21 +132,24 @@ class Algorithm:
 	psi_load = self.controller.get_euler_load()[2]
 
         #rospy.loginfo('vision filtered pos->(%.2f %.2f %.2f)->(%.2f %.2f %.2f) vel->(%.2f %.2f %.2f)' % (x_cam, y_cam, z_cam, self.x_cam, self.y_cam, self.z_cam, self.x_cam_dot, self.y_cam_dot, self.z_cam_dot))
-        self.log_vision.write('%s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s\n' \
-                % (self.time(), x_cam, y_cam, z_cam, self.x_cam, self.y_cam, self.z_cam, self.x_cam_dot, self.y_cam_dot, self.z_cam_dot, self.x_load, self.y_load, self.z_load, phi_load, theta_load, psi_load, gamma, self.gamma, self.gamma_dot))
+        self.log_vision.write('%s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s\n' \
+                % (self.time(), x_cam, y_cam, z_cam, self.x_cam, self.y_cam, self.z_cam, self.x_cam_dot, self.y_cam_dot, self.z_cam_dot, x_load, y_load, z_load, self.x_load, self.y_load, self.z_load, phi_load, theta_load, psi_load, gamma, self.gamma, self.gamma_dot))
         self.log_vision.flush()
 
 
-        w = self.controller.get_orientation().w
-        x = self.controller.get_orientation().x
-        y = self.controller.get_orientation().y
-        z = self.controller.get_orientation().z
+#        w = self.controller.get_orientation().w
+#        x = self.controller.get_orientation().x
+#        y = self.controller.get_orientation().y
+#        z = self.controller.get_orientation().z
 
 	
 
         phi = self.controller.get_euler()[0]
         theta = self.controller.get_euler()[1]
         psi = self.controller.get_euler()[2]
+
+#        print w,x,y,z
+#        print phi,theta,psi,phi_load,theta_load,psi_load
 
         #rospy.loginfo('orientation quat->(%.2f %.2f %.2f %.2f) euler->(%.2f %.2f %.2f)' % (w, x, y, z, phi, theta, psi))
 
@@ -181,16 +188,16 @@ class Algorithm:
         self.x_estimated[10] = self.model.dot.phi
         self.x_estimated[11] = self.model.dot.theta
 
-        self.x_estimated[12] = 1.
 
 
-        self.x_estimated, self.covariances = self.kalman.step(self.x_estimated, self.covariances, x_current_pred.reshape(9,1), x_prediction.reshape(9,1), self.control, [self.model.k1_psi, self.model.k1_phi, self.model.k1_theta, self.model.k2_psi, self.model.k2_phi, self.model.k2_theta, 0], dt)
+
+        self.x_estimated, self.covariances = self.kalman.step(self.x_estimated, self.covariances, x_current_pred.reshape(9,1), x_prediction.reshape(9,1), self.control, [self.model.k1_psi, self.model.k1_phi, self.model.k1_theta, self.model.k2_psi, self.model.k2_phi, self.model.k2_theta], dt)
 
 
         #rospy.loginfo('kalman estimated pos->(%.2f %.2f %.2f %.2f %.2f %.2f) vel->(%.2f %.2f %.2f)' % (self.x_estimated[0], self.x_estimated[1], self.x_estimated[2], self.x_estimated[6], self.x_estimated[7], self.x_estimated[8], self.x_estimated[3], self.x_estimated[4], self.x_estimated[5]))
 
-        self.log_kalman.write('%s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s\n' \
-                % (self.time(), self.x_estimated[0], self.x_estimated[1], self.x_estimated[2], self.x_estimated[3], self.x_estimated[4], self.x_estimated[5], self.x_estimated[6], self.x_estimated[7], self.x_estimated[8], self.x_estimated[9], self.x_estimated[10], self.x_estimated[11], self.x_estimated[12], psi, phi, theta))
+        self.log_kalman.write('%s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s\n' \
+                % (self.time(), self.x_estimated[0], self.x_estimated[1], self.x_estimated[2], self.x_estimated[3], self.x_estimated[4], self.x_estimated[5], self.x_estimated[6], self.x_estimated[7], self.x_estimated[8], self.x_estimated[9], self.x_estimated[10], self.x_estimated[11], psi, phi, theta))
         self.log_kalman.flush()
 
 #---------------------------------------------------------
@@ -198,44 +205,52 @@ class Algorithm:
 
 
 
-x_gamma_current = array([self.x_cam, self.z_cam, self.x_cam_dot, self.z_cam_dot, theta, gamma], dtype = double)
+	#x_gamma_current = array([self.x_cam, self.z_cam, self.x_cam_dot, self.z_cam_dot, theta, gamma], dtype = double)
+	x_gamma_current = array([self.y_cam, self.z_cam, self.y_cam_dot, self.z_cam_dot, theta, gamma], dtype = double)
 
-
-
-        self.model_gamma_ref.x, self.model_gamma_ref.z, self.model_gamma_ref.dx, self.model_gamma_ref.dz, self.model_gamma_ref.theta, self.model_gamma_ref,gamma = x_gamma_current
+        self.model_gamma_ref.x, self.model_gamma_ref.z, self.model_gamma_ref.dx, self.model_gamma_ref.dz, self.model_gamma_ref.theta, self.model_gamma_ref.gamma = x_gamma_current
 
 	self.model_gamma_ref.dtheta = self.model_gamma.dtheta
  	self.model_gamma_ref.dgamma = self.model_gamma.dgamma
 
         n2 = 0
-        while n2 < self.delay1:# delay additional steps
-            self.model_gamma_ref.set_control([self.u1_q.get_index(self.delay1-n2),self.u2_q.get_index(self.delay1-n2),self.u3_q.get_index(self.delay1-n2),self.u4_q.get_index(self.delay1-n2)])
+        while n2 < self.delay2:# delay additional steps
+            self.model_gamma_ref.set_control([self.u1_q.get_index(self.delay2-n2),self.u2_q.get_index(self.delay2-n2),self.u3_q.get_index(self.delay2-n2),self.u4_q.get_index(self.delay2-n2)])
             self.model_gamma_ref.step(0.01)
             n2 += 1
 
-        x_gamma_current_pred = array([self.model_gamma_ref.x, self.model_gamma_ref.z, self.model_gamma_ref.dx,  self.model_gamma_ref.dz, self.model_gamma_ref.theta, self.model_gamma_ref.gamma], dtype = double)
+	x_gamma_current_pred = array([self.model_gamma_ref.x, self.model_gamma_ref.z, self.model_gamma_ref.dx,  self.model_gamma_ref.dz, self.model_gamma_ref.theta, self.model_gamma_ref.gamma], dtype = double)
+
+#	x_gamma_current_pred = array([self.model_gamma_ref.y, self.model_gamma_ref.z, self.model_gamma_ref.dy,  self.model_gamma_ref.dz, self.model_gamma_ref.theta, self.model_gamma_ref.gamma], dtype = double)
+
 
 
 #-------use prediction first
 
         x_gamma_prediction = array([self.model_gamma.x, self.model_gamma.z, self.model_gamma.dx, self.model_gamma.dz, self.model_gamma.theta, self.model_gamma.gamma], dtype = double)
 
+#	x_gamma_prediction = array([self.model_gamma.y, self.model_gamma.z, self.model_gamma.dy, self.model_gamma.dz, self.model_gamma.theta, self.model_gamma.gamma], dtype = double)
+
         self.x_gamma_estimated[0] = self.model_gamma.x
+	#self.x_gamma_estimated[0] = self.model_gamma.y
         self.x_gamma_estimated[1] = self.model_gamma.z
         self.x_gamma_estimated[2] = self.model_gamma.dx
+	#self.x_gamma_estimated[2] = self.model_gamma.dy
         self.x_gamma_estimated[3] = self.model_gamma.dz
         self.x_gamma_estimated[4] = self.model_gamma.theta
-        self.x_gamma_estimated[5] = self.model_gamma.dtheta
-	self.x_gamma_estimated[6] = self.model_gamma.gamma
+	self.x_gamma_estimated[5] = self.model_gamma.gamma 
+        self.x_gamma_estimated[6] = self.model_gamma.dtheta
 	self.x_gamma_estimated[7] = self.model_gamma.dgamma
 	
 
 
-        self.x_gamma_estimated, self.covariances_gamma = self.kalman.step(self.x_gamma_estimated, self.covariances_gamma, x_gamma_current_pred.reshape(6,1), x_gamma_prediction.reshape(6,1), self.control, [self.model_gamma.M1, self.model_gamma.M2, self.model_gamma.Iyy, self.model_gamma.L], dt)
+        self.x_gamma_estimated, self.covariances_gamma = self.kalman_gamma.step(self.x_gamma_estimated, self.covariances_gamma, x_gamma_current_pred.reshape(6,1), x_gamma_prediction.reshape(6,1), [self.control[0],self.control[2]], [self.model_gamma.M1, self.model_gamma.M2, self.model_gamma.Iyy, self.model_gamma.L], dt)
 
 
 
-
+	self.log_kalman_gamma.write('%s %s %s %s %s %s  %s %s %s\n' \
+                % (self.time(), self.x_gamma_estimated[0], self.x_gamma_estimated[1], self.x_gamma_estimated[2], self.x_gamma_estimated[3], self.x_gamma_estimated[4], self.x_gamma_estimated[5], self.x_gamma_estimated[6], self.x_gamma_estimated[7]))
+        self.log_kalman_gamma.flush()
 
 
 
@@ -296,16 +311,16 @@ x_gamma_current = array([self.x_cam, self.z_cam, self.x_cam_dot, self.z_cam_dot,
 	    self.line_time += dt
  	    self.counter += 1
 	self.time_prev = self.time()
-	M1 = 0.6
-	M2 = 0.2
+	M1 = self.model_gamma.M1
+	M2 = self.model_gamma.M2
 
         Az = vz * (k_z + alpha) + k_z * alpha * (z_gr - self.z_ref) - G + M1*L*self.gamma_dot*self.gamma_dot*cos(self.gamma)/(M1+M2)
         Ax = vx * (k_x + betta) + k_x * betta * (x_gr - self.x_ref)
         Ay = vy * (k_x + betta) + k_x * betta * (y_gr - self.y_ref) - M1*L*self.gamma_dot*self.gamma_dot*sin(self.gamma)/(M1+M2)
 
-        Azz = Az - sin(self.gamma)*M1*((alpha2 + k_gamma)*self.gamma_dot + alpha2*k_gamma*self.gamma)/(M1+M2)
+        Azz = Az - sin(self.gamma)*M1*L*((alpha2 + k_gamma)*self.gamma_dot + alpha2*k_gamma*self.gamma)/(M1+M2)
         Axx = Ax
-        Ayy = Ay - cos(self.gamma)*M1*((alpha2 + k_gamma)*self.gamma_dot + alpha2*k_gamma*self.gamma)/(M1+M2)
+        Ayy = Ay - cos(self.gamma)*M1*L*((alpha2 + k_gamma)*self.gamma_dot + alpha2*k_gamma*self.gamma)/(M1+M2)
 
         Msum = M1+M2 #0.5 - без груза #0.55 #0.42
         #norm_coef = 1. * M1 / (M1 * G) #0.45
@@ -327,7 +342,7 @@ x_gamma_current = array([self.x_cam, self.z_cam, self.x_cam_dot, self.z_cam_dot,
 
 
 
-        self.model.x, self.model.y, self.model.z, self.model.dot.x, self.model.dot.y, self.model.dot.z, self.model.psi, self.model.phi, self.model.theta, self.model.dot.psi, self.model.dot.phi, self.model.dot.theta, time_delay = self.x_estimated
+        self.model.x, self.model.y, self.model.z, self.model.dot.x, self.model.dot.y, self.model.dot.z, self.model.psi, self.model.phi, self.model.theta, self.model.dot.psi, self.model.dot.phi, self.model.dot.theta = self.x_estimated
         self.model.set_control(self.control)
         self.model.step(dt)
 
